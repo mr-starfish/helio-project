@@ -1,4 +1,3 @@
-
 export interface FormData {
   produtoExplicacao: string;
   produtoNome: string;
@@ -21,9 +20,5 @@ export interface AuthState {
 }
 
 export interface GeneratedContent {
-  id: string;
-  title: string;
-  content: string;
-  type: string;
-  createdAt: string;
+  mensagem: string;
 }
