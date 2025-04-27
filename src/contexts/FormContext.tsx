@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { FormData, GeneratedContent } from '../types';
 import { useToast } from "@/components/ui/use-toast";
@@ -77,7 +76,6 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     
     try {
-      // URL do webhook do n8n - em um app real viria de uma variável de ambiente
       const webhookUrl = "https://n8n.ciatotech.com/webhook-test/get-guru";
       
       toast({
@@ -85,7 +83,6 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
         description: "Estamos processando suas informações...",
       });
 
-      // Enviar os dados para o webhook
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
@@ -98,16 +95,8 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('Falha ao enviar dados para processamento');
       }
 
-      // Simular recebimento de conteúdo gerado (em um app real, teríamos uma resposta do n8n)
-      // Aqui vamos esperar um pouco para simular o tempo de processamento do n8n
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Resposta simulada do webhook
-      const mockResponse: GeneratedContent = {
-        mensagem: `<h3>Ideias geradas!</h3><p>Use essa headline: 'Você também pode lucrar com ${formData.produtoNome}!'</p><p>Problema resolvido: ${formData.principalProblema}</p><p>${formData.produtoExplicacao}</p>`
-      };
-
-      setGeneratedContent(mockResponse);
+      const data = await response.json();
+      setGeneratedContent(data);
       
       toast({
         title: "Conteúdo gerado com sucesso!",
