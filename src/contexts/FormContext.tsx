@@ -14,7 +14,7 @@ interface FormContextType {
   goToStep: (step: number) => void;
   isSubmitting: boolean;
   submitForm: () => Promise<void>;
-  generatedContent: GeneratedContent[];
+  generatedContent: GeneratedContent;
   isLoading: boolean;
 }
 
@@ -40,7 +40,7 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState<GeneratedContent[]>([]);
+  const [generatedContent, setGeneratedContent] = useState<GeneratedContent>({ mensagem: '' });
   const [isLoading, setIsLoading] = useState(false);
   const totalSteps = 5;
   const { toast } = useToast();
@@ -102,32 +102,12 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
       // Aqui vamos esperar um pouco para simular o tempo de processamento do n8n
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Dados simulados - no app real viriam do n8n
-      const mockGeneratedContent: GeneratedContent[] = [
-        {
-          id: '1',
-          title: 'Título para Publicação',
-          content: `Você já enfrentou problemas com ${formData.principalProblema}? Nosso produto ${formData.produtoNome} foi desenvolvido especialmente para pessoas como você, que buscam uma solução efetiva. Conheça mais e transforme sua experiência!`,
-          type: 'social',
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          title: 'Descrição para Landing Page',
-          content: `${formData.produtoNome} é a solução que ${formData.avatarNome} estava procurando! Especialmente desenvolvido para resolver ${formData.principalProblema}, nosso produto oferece resultados comprovados. ${formData.produtoExplicacao}`,
-          type: 'landing',
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '3',
-          title: 'E-mail de Boas-vindas',
-          content: `Olá ${formData.avatarNome}! Estamos felizes em tê-lo conosco. Sabemos que você enfrentou ${formData.principalProblema} e é por isso que criamos ${formData.produtoNome}. ${formData.produtoExplicacao} Estamos ansiosos para acompanhar sua jornada de sucesso!`,
-          type: 'email',
-          createdAt: new Date().toISOString(),
-        }
-      ];
+      // Resposta simulada do webhook
+      const mockResponse: GeneratedContent = {
+        mensagem: `<h3>Ideias geradas!</h3><p>Use essa headline: 'Você também pode lucrar com ${formData.produtoNome}!'</p><p>Problema resolvido: ${formData.principalProblema}</p><p>${formData.produtoExplicacao}</p>`
+      };
 
-      setGeneratedContent(mockGeneratedContent);
+      setGeneratedContent(mockResponse);
       
       toast({
         title: "Conteúdo gerado com sucesso!",
