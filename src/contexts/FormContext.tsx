@@ -46,7 +46,7 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const totalSteps = 5;
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const updateFormData = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -105,34 +105,48 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
       const truncatedContent = data.mensagem.substring(0, 1000000);
       setGeneratedContent({ mensagem: data.mensagem });
 
-      // Usar diretamente o user do contexto Auth em vez de tentar obter novamente
-      if (user) {
-        const { error: historyError } = await supabase
-          .from('content_history')
-          .insert({
-            user_id: user.id,
-            product_name: formData.produtoNome,
-            product_explanation: formData.produtoExplicacao,
-            client_description: formData.clienteDescricao,
-            main_problem: formData.principalProblema,
-            avatar_name: formData.avatarNome,
-            generated_content: truncatedContent
-          });
+      // Apenas tenta salvar no histórico se o usuário estiver autenticado
+      if (isAuthenticated && user && user.id) {
+        console.log("Tentando salvar histórico para usuário:", user.id);
+        
+        try {
+          const { error: historyError } = await supabase
+            .from('content_history')
+            .insert({
+              user_id: user.id,
+              product_name: formData.produtoNome,
+              product_explanation: formData.produtoExplicacao,
+              client_description: formData.clienteDescricao,
+              main_problem: formData.principalProblema,
+              avatar_name: formData.avatarNome,
+              generated_content: truncatedContent
+            });
 
-        if (historyError) {
-          console.error("Erro ao salvar histórico:", historyError);
+          if (historyError) {
+            console.error("Erro ao salvar histórico:", historyError);
+            toast({
+              title: "Aviso",
+              description: "Conteúdo gerado com sucesso, mas houve um erro ao salvar no histórico: " + historyError.message,
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Conteúdo gerado com sucesso!",
+              description: "Seus textos personalizados estão prontos e salvos no histórico.",
+            });
+          }
+        } catch (insertError) {
+          console.error("Exceção ao inserir no histórico:", insertError);
           toast({
-            title: "Aviso",
-            description: "Conteúdo gerado com sucesso, mas houve um erro ao salvar no histórico.",
+            title: "Erro",
+            description: "Problema ao salvar no histórico: " + (insertError instanceof Error ? insertError.message : "Erro desconhecido"),
             variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Conteúdo gerado com sucesso!",
-            description: "Seus textos personalizados estão prontos.",
           });
         }
       } else {
+        const authReason = !isAuthenticated ? "não autenticado" : !user ? "usuário nulo" : !user.id ? "ID do usuário nulo" : "desconhecido";
+        console.log(`Usuário não pode salvar histórico. Motivo: ${authReason}`);
+        
         toast({
           title: "Aviso",
           description: "Conteúdo gerado com sucesso, mas você precisa estar logado para salvar no histórico.",

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from "@/contexts/AuthContext";
 
 interface HistoryItem {
   id: string;
@@ -18,16 +19,36 @@ export const History = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
     const fetchHistory = async () => {
+      if (!isAuthenticated || !user) {
+        setIsLoading(false);
+        toast({
+          title: "Acesso negado",
+          description: "Você precisa estar logado para ver seu histórico.",
+          variant: "destructive",
+        });
+        navigate('/');
+        return;
+      }
+
       try {
+        console.log("Buscando histórico para o usuário:", user.id);
+        
         const { data, error } = await supabase
           .from('content_history')
           .select('*')
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Erro na consulta do histórico:", error);
+          throw error;
+        }
+        
+        console.log("Dados do histórico recebidos:", data);
         setHistory(data || []);
       } catch (error) {
         console.error('Erro ao carregar histórico:', error);
@@ -42,7 +63,17 @@ export const History = () => {
     };
 
     fetchHistory();
-  }, [toast]);
+  }, [toast, navigate, user, isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <h1 className="text-3xl font-bold mb-6">Acesso Restrito</h1>
+        <p className="mb-6">Você precisa estar logado para acessar seu histórico.</p>
+        <Button onClick={() => navigate('/')}>Voltar para a Página Inicial</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

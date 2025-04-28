@@ -18,6 +18,15 @@ export const useAuth = () => {
   return context;
 };
 
+// Função para gerar UUID no formato v4
+const generateUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0,
+        v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authState, setAuthState] = useState<AuthState>({
     isAuthenticated: false,
@@ -81,9 +90,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Simular delay de rede
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Dados simulados - em um app real viriam do backend
+      // Dados simulados - usando UUID válido para o ID do usuário
       const mockUser: User = {
-        id: '1',
+        id: generateUUID(), // Gera um UUID v4 válido
         email: email,
         name: email.split('@')[0],
       };
