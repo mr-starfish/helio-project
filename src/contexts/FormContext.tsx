@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { FormData, GeneratedContent } from '../types';
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface FormContextType {
   formData: FormData;
@@ -51,6 +52,7 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
   const resetForm = () => {
     setFormData(initialFormData);
     setCurrentStep(1);
+    setGeneratedContent({ mensagem: '' });
   };
 
   const nextStep = () => {
@@ -97,11 +99,32 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
 
       const data = await response.json();
       setGeneratedContent(data);
-      
-      toast({
-        title: "Conteúdo gerado com sucesso!",
-        description: "Seus textos personalizados estão prontos.",
-      });
+
+      const { error: historyError } = await supabase
+        .from('content_history')
+        .insert({
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          product_name: formData.produtoNome,
+          product_explanation: formData.produtoExplicacao,
+          client_description: formData.clienteDescricao,
+          main_problem: formData.principalProblema,
+          avatar_name: formData.avatarNome,
+          generated_content: data.mensagem
+        });
+
+      if (historyError) {
+        console.error("Erro ao salvar histórico:", historyError);
+        toast({
+          title: "Aviso",
+          description: "Conteúdo gerado com sucesso, mas houve um erro ao salvar no histórico.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Conteúdo gerado com sucesso!",
+          description: "Seus textos personalizados estão prontos.",
+        });
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro ao processar sua solicitação';
       
