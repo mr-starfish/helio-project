@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader } from "lucide-react";
+import { Loader, Eye, EyeOff } from "lucide-react";
 
 export const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -13,6 +13,7 @@ export const LoginForm = () => {
   const { login, isLoading, error } = useAuth();
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const validateForm = () => {
     let isValid = true;
@@ -52,6 +53,10 @@ export const LoginForm = () => {
     await login(email, password);
   };
 
+  const toggleShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <Card className="w-full max-w-md mx-auto shadow-lg">
       <CardHeader className="space-y-1">
@@ -76,14 +81,26 @@ export const LoginForm = () => {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="******"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={passwordError ? "border-red-500" : ""}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="******"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={passwordError ? "border-red-500" : ""}
+              />
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon" 
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+                onClick={toggleShowPassword}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                <span className="sr-only">{showPassword ? "Ocultar senha" : "Mostrar senha"}</span>
+              </Button>
+            </div>
             {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
           </div>
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}

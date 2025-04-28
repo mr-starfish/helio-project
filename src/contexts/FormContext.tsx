@@ -1,7 +1,9 @@
+
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { FormData, GeneratedContent } from '../types';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface FormContextType {
   formData: FormData;
@@ -44,6 +46,7 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const totalSteps = 5;
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const updateFormData = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -102,14 +105,12 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
       const truncatedContent = data.mensagem.substring(0, 1000000);
       setGeneratedContent({ mensagem: data.mensagem });
 
-      const user = await supabase.auth.getUser();
-      const userId = user.data.user?.id;
-
-      if (userId) {
+      // Usar diretamente o user do contexto Auth em vez de tentar obter novamente
+      if (user) {
         const { error: historyError } = await supabase
           .from('content_history')
           .insert({
-            user_id: userId,
+            user_id: user.id,
             product_name: formData.produtoNome,
             product_explanation: formData.produtoExplicacao,
             client_description: formData.clienteDescricao,
