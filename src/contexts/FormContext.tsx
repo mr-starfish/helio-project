@@ -78,7 +78,7 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     
     try {
-      const webhookUrl = "https://n8n.ciatotech.com/webhook-test/get-guru";
+      const webhookUrl = "https://n8n.ciatotech.com/webhook/get-guru";
       
       toast({
         title: "Enviando dados",
@@ -98,31 +98,44 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const data = await response.json();
-      setGeneratedContent(data);
+      
+      const truncatedContent = data.mensagem.substring(0, 1000000);
+      setGeneratedContent({ mensagem: data.mensagem });
 
-      const { error: historyError } = await supabase
-        .from('content_history')
-        .insert({
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          product_name: formData.produtoNome,
-          product_explanation: formData.produtoExplicacao,
-          client_description: formData.clienteDescricao,
-          main_problem: formData.principalProblema,
-          avatar_name: formData.avatarNome,
-          generated_content: data.mensagem
-        });
+      const user = await supabase.auth.getUser();
+      const userId = user.data.user?.id;
 
-      if (historyError) {
-        console.error("Erro ao salvar histórico:", historyError);
-        toast({
-          title: "Aviso",
-          description: "Conteúdo gerado com sucesso, mas houve um erro ao salvar no histórico.",
-          variant: "destructive",
-        });
+      if (userId) {
+        const { error: historyError } = await supabase
+          .from('content_history')
+          .insert({
+            user_id: userId,
+            product_name: formData.produtoNome,
+            product_explanation: formData.produtoExplicacao,
+            client_description: formData.clienteDescricao,
+            main_problem: formData.principalProblema,
+            avatar_name: formData.avatarNome,
+            generated_content: truncatedContent
+          });
+
+        if (historyError) {
+          console.error("Erro ao salvar histórico:", historyError);
+          toast({
+            title: "Aviso",
+            description: "Conteúdo gerado com sucesso, mas houve um erro ao salvar no histórico.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Conteúdo gerado com sucesso!",
+            description: "Seus textos personalizados estão prontos.",
+          });
+        }
       } else {
         toast({
-          title: "Conteúdo gerado com sucesso!",
-          description: "Seus textos personalizados estão prontos.",
+          title: "Aviso",
+          description: "Conteúdo gerado com sucesso, mas você precisa estar logado para salvar no histórico.",
+          variant: "destructive",
         });
       }
     } catch (error) {
