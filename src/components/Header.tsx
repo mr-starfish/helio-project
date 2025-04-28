@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 
 export const Header = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <header className="bg-white border-b">
@@ -21,7 +21,7 @@ export const Header = () => {
         </div>
         <div>
           {user ? (
-            <Button variant="ghost" onClick={signOut}>
+            <Button variant="ghost" onClick={logout}>
               Sair
             </Button>
           ) : (
